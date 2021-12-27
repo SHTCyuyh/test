@@ -32,6 +32,9 @@ _C.DATASET.HEATMAP_SIZE = [64,64,64]
 # _C.DATASET.TRAIN_PATH = "/data1/nlospose/zip/train/"
 # _C.DATASET.TRAIN_PATH = "/home/liuping/data/mini_test/"
 _C.DATASET.TRAIN_PATH = "/data1/nlospose/person/person10/train/"
+
+# _C.DATASET.EVAL_PATH = "/home/liuping/data/mini_test/"
+_C.DATASET.EVAL_PATH = "/data1/nlospose/person/person10/val"
 _C.DATASET.VOL_SIZE = [64,64,64]
 _C.DATASET.DAWNSAMPLE_CNT = 0 #2
 _C.DATASET.NUM_JOINTS = 24

@@ -55,10 +55,12 @@ class Meas2Pose(nn.Module):
 
     def forward(self, x):
         x = self.feature_extraction(x)
-        feature = self.feature_propagation(x, [0, 0], [x.shape[2], x.shape[2]])
-        feature = normalize(feature)
-        x = self.unet3d(feature)
-        x = x + feature
+        residual_x = self.feature_propagation(x, [0, 0], [x.shape[2], x.shape[2]])
+        x = normalize(residual_x)
+        x = self.unet3d(x)
+        x = x + residual_x
+        
+        feature = x
         # x_with_skip = x + feature
         x = downsample(x, 1)
         # x = self.vis_net(x)
@@ -84,7 +86,7 @@ if __name__ == '__main__':
 
     input, vol, joints, person_id = next(iter(train_dataloader))
     input = input.to(cfg.DEVICE)
-    model = Meas2Vol(cfg).to(cfg.DEVICE)
+    model = Meas2Pose(cfg).to(cfg.DEVICE)
     # input = torch.ones((1, 1, 128, 256, 256)).to(cfg.DEVICE)
     output, feature= model(input)
     vis_3view(feature, "lct_recon")

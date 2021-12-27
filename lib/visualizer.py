@@ -18,19 +18,14 @@ def volume_log(volume, res_path, name, index):
     volume_path = res_path + '/volume' + f'/{name}_{index}.pt'
     figure_path = res_path + '/figure/projection_of_vol' + \
         f'/{name}_{index}.jpg'
-    torch.save(volume[0, 0], volume_path)
+    # torch.save(volume[0, 0], volume_path)
     im = volume[0, 0].sum(0).detach().cpu().numpy()
-    run.log({"begin": 111})
-    fig = plt.figure()
+    plt.figure()
     plt.imshow(im)
-
-    run.log({f"projection of {name}": wandb.Image(fig)})
+    wandb.log({f"projection of {name}": plt}, commit=False)
     plt.savefig(figure_path)
-    table.add_data(wandb.Image(im), 123)
-    run.log({"test table": table})
-    run.log({f"projection of {name}": wandb.Image(im)})
-    run.log({"image for file": wandb.Image("/home/liuping/NlosAutoEncoder/meas2pose_voxel_l1_17joint_1219/results/figure/projection_of_vol/test_0copy.jpg")})
-    run.log({f"projection of {name}": plt})
+    plt.clf()
+
 
 def joints_log(joints, res_path, joint_name, index=0):
     os.makedirs(res_path, exist_ok=True)
@@ -70,8 +65,9 @@ def joints_log(joints, res_path, joint_name, index=0):
     # ax.invert_zaxis()
     ax.invert_yaxis()
     # ax.invert_xaxis()
-    ax.figure.savefig(res_path + joint_name)
-    wandb.log({""})
+    ax.figure.savefig(res_path + '/' + joint_name + f"{index}")
+    wandb.log({f"joints of {joint_name}": wandb.Image(ax.figure)}, commit=False)
+    plt.clf()
 
 
 def renderBones(ax, xs, ys, zs):
@@ -115,25 +111,28 @@ def threeviews_log(re, path, name, index=0):
     # elif name == 'volume':
     zdim = volumn_MxNxN.shape[0]
     volumn_MxNxN = volumn_MxNxN[:zdim]
-    print('volumn min, %f' % volumn_MxNxN.min())
-    print('volumn max, %f' % volumn_MxNxN.max())
+    # print('volumn min, %f' % volumn_MxNxN.min())
+    # print('volumn max, %f' % volumn_MxNxN.max())
     # volumn_MxNxN[:5] = 0
     # volumn_MxNxN[-5:] = 0
 
     volumn_MxNxN[volumn_MxNxN < 0] = 0
     front_view = np.max(volumn_MxNxN, axis=0)
     plt.imshow(front_view / np.max(front_view))
-    path = Path(path)
-    Path.mkdir(path, exist_ok=True)
+    # path = Path(path)
+    os.makedirs(path, exist_ok=True)
     plt.savefig(path + f'/{name}_front_view_{index}.jpg')
+    wandb.log({f"{name}_front_view" : wandb.Image(plt)}, commit=False)
 
     top_view = np.max(volumn_MxNxN, axis=1)
     plt.imshow(np.rot90(top_view / np.max(top_view), 2))
     plt.savefig(path + f'/{name}_top_view_{index}.jpg')
+    wandb.log({f"{name}_top_view" : wandb.Image(plt)}, commit=False)
 
     left_view = np.max(volumn_MxNxN, axis=2)
     plt.imshow(np.rot90(left_view / np.max(left_view), 3))
     plt.savefig(path + f'/{name}_left_view_{index}.jpg')
+    wandb.log({f"{name}_left_view" : wandb.Image(plt)}, commit=False)
 
 
 if __name__ == "__main__":
