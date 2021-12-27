@@ -3,3 +3,5 @@ wandb
 *.pyc
 *.pt 
 *.jpg
+*.txt
+*.png
