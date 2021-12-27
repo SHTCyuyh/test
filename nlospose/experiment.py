@@ -57,8 +57,9 @@ def run():
     if cfg.WANDB:
         wandb.login()
 
-        wandb.init(project=cfg.PROJECT_NAME, config=dict(
-            cfg), name="meas2vol_testWandb")
+        wandb.init(project=cfg.PROJECT_NAME,
+                   config=dict(cfg),
+                   name="v2v")
         # build_model_and_log(cfg, run)
 
     seed_everything(23333)
@@ -79,9 +80,11 @@ def run():
         lr_scheduler.step()
         if epoch % 3 == 0 or epoch == cfg.TRAIN.END_EPOCH:
             torch.save(model, f"./checkpoint/{epoch}.pth")
-        performance  = eval(cfg, model, eval_dataloader, criterion, epoch).detach().cpu().numpy()
+        performance = eval(cfg, model, eval_dataloader,
+                           criterion, epoch).detach().cpu().numpy()
         if performance < best_performance:
-            torch.save(model, f'./results/trained_models/{cfg.PROJECT_NAME}.pth')
+            torch.save(
+                model, f'./results/trained_models/{cfg.PROJECT_NAME}.pth')
             best_performance = performance
 
     if cfg.WANDB:

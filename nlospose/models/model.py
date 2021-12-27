@@ -47,9 +47,15 @@ class Meas2Pose(nn.Module):
                 in_channels=1,
                 n_channels=4,
             )
+
+        # voxel2voxel net
+        self.pose_net = V2VModel(1, cfg.DATASET.NUM_JOINTS)
+
+        # res3d net
+        # self.pose_net = PoseNet3d(512, 2, 256, 4, 1, 24, 64, True, pretrained=False, progress=True)
+        
+        # 2d pose net
         # self.vis_net = VisibleNet(basedim=3)
-        # self.pose_net = V2VModel(1, cfg.DATASET.NUM_JOINTS)
-        self.pose_net = PoseNet3d(512, 2, 256, 4, 1, 24, 64, True, pretrained=False, progress=True)
         # self.pose_net_cfg = get_config() 
         # self.pose_net = get_pose_net(self.pose_net_cfg, num_joints=24)
 
@@ -59,7 +65,7 @@ class Meas2Pose(nn.Module):
         x = normalize(residual_x)
         x = self.unet3d(x)
         x = x + residual_x
-        
+
         feature = x
         # x_with_skip = x + feature
         x = downsample(x, 1)
