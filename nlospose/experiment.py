@@ -59,7 +59,7 @@ def run():
 
         wandb.init(project=cfg.PROJECT_NAME,
                    config=dict(cfg),
-                   name="v2v")
+                   name="v2v_person2_mini")
         # build_model_and_log(cfg, run)
 
     seed_everything(23333)

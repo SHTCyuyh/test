@@ -39,9 +39,10 @@ class Meas2Pose(nn.Module):
             dnum=cfg.MODEL.DNUM,
             dev=cfg.DEVICE,
         )
+
         if cfg.MODEL.PRETRAIN_AUTOENCODER == True:
             self.unet3d = torch.load(cfg.MODEL.PRETRAIN_AUTOENCODER_PATH, map_location=f"cuda:{cfg.DEVICE}")
-            freeze_layer(self.unet3d)
+            # freeze_layer(self.unet3d)
         else:
             self.unet3d = UNet3d(
                 in_channels=1,
@@ -63,8 +64,8 @@ class Meas2Pose(nn.Module):
         x = self.feature_extraction(x)
         residual_x = self.feature_propagation(x, [0, 0], [x.shape[2], x.shape[2]])
         x = normalize(residual_x)
-        x = self.unet3d(x)
-        x = x + residual_x
+        # x = self.unet3d(x)
+        # x = x + residual_x
 
         feature = x
         # x_with_skip = x + feature

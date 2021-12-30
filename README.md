@@ -28,3 +28,4 @@ output的2d投影left和top为什么集中在前面？
 4. git clone -b backbone --> 2d backbone git push
    train and store
 5. 参看vol2pose结果
+6. weight

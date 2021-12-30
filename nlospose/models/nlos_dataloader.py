@@ -1,6 +1,8 @@
 import os
 import sys
 sys.path.append('./')
+from lib.visualizer import joints_log
+
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,6 +22,7 @@ class NlosDataset(Dataset):
         self.pan = cfg.DATASET.PAN
         self.ratio = cfg.DATASET.RATIO
         self.vol_size = cfg.DATASET.VOL_SIZE
+        self.heatmap_size = cfg.MODEL.HEATMAP_SIZE
         self.downsample_cnt = cfg.DATASET.DAWNSAMPLE_CNT
 
         self.measFiles = []
@@ -92,11 +95,25 @@ class NlosDataset(Dataset):
             vol = (vol[:,:,::2] + vol[:,:,1::2]) / 2
 
         
-        joints[:,0] = (joints[:,0] + self.pan) * self.vol_size[0] / self.ratio
-        joints[:,1] = (joints[:,1] + self.pan) * self.vol_size[1] / self.ratio
-        joints[:,2] = (joints[:,2] + self.pan) * self.vol_size[2] / self.ratio
-        person_id = measFile
-        return rearrange(meas, 't h w -> 1 t h w'), rearrange(vol, 'd h w -> 1 d h w'), joints, person_id
+        # joints[:,0] = (joints[:,0] + self.pan) * self.vol_size[0] / self.ratio
+        # joints[:,1] = (joints[:,1] + self.pan) * self.vol_size[1] / self.ratio
+        # joints[:,2] = (joints[:,2] + self.pan) * self.vol_size[2] / self.ratio
+        # joints[:, 0] = (joints[:, 0]*165+128)
+        # joints[:, 1] = 256-(joints[:, 1]*165+128)
+        # joints[:, 2] = 223-(joints[:, 2]*165+128)
+        joints[:, 0] = (joints[:, 0]*128+128)
+        joints[:, 1] = 256-(joints[:, 1]*128+128)
+        joints[:, 2] = 225-(joints[:, 2]*128+128)
+        w = joints[:, 0].copy()
+        h = joints[:, 1].copy()
+        d = joints[:, 2].copy()
+        joints[:, 0] = d
+        joints[:, 1] = h
+        joints[:, 2] = w
+        _, person_name = os.path.split(measFile)
+        person_id, _ = os.path.splitext(person_name)
+        return rearrange(meas, 't h w -> 1 t h w'), rearrange(vol, 'd h w -> 1 d h w'),  \
+               joints / (self.vol_size[0] / self.heatmap_size[0]), person_id
 
 
     def __len__(self):

@@ -14,12 +14,14 @@ sys.path.append('./nlospose/models')
 
 def train(model, dataloader, criterion, optimizer, cfg, epoch):
     if cfg.WANDB:
-        wandb.watch(model)
+        wandb.watch(model, log='all')
 
     model.train()
     total_ct = (cfg.TRAIN.END_EPOCH - cfg.TRAIN.BEGIN_EPOCH) * len(dataloader)
     time_begin = time.time()
     for step, (input, vol, target_joints, person_id) in enumerate(dataloader):
+        np.savetxt('./1.txt', target_joints.cpu().numpy().reshape(24,-1))
+        
         example_ct = epoch * len(dataloader) + step
 
         input = input.to(cfg.DEVICE)
@@ -38,29 +40,29 @@ def train(model, dataloader, criterion, optimizer, cfg, epoch):
                   + f"leave {used_time * total_ct / (50 * cfg.TRAIN.BATCH_SIZE) / 3600} h")
             time_begin = time.time()
 
-        if example_ct % 10 == 0:
-            volume_log(vol, './results/volume', "volume", example_ct)
-            volume_log(output, './results/volume', "output", example_ct)
-            volume_log(feature, './results/volume', 'feature', example_ct)
+        if example_ct % 1 == 0:
+            volume_log(vol, './results/volume', f"volume_{person_id}", example_ct)
+            volume_log(output, './results/volume', f"output_{person_id}", example_ct)
+            volume_log(feature, './results/volume', f'feature_{person_id}', example_ct)
 
             pred = softmax_integral_tensor(output, cfg.DATASET.NUM_JOINTS, True,
                                            cfg.DATASET.HEATMAP_SIZE[0], cfg.DATASET.HEATMAP_SIZE[1], cfg.DATASET.HEATMAP_SIZE[2])
             joints_log(pred.reshape(cfg.DATASET.NUM_JOINTS, 3).detach().cpu().numpy(),
                        './results/figure/joints',
-                       "pred_joints",
+                       f"pred_joints_{person_id}",
                        example_ct)
 
             joints_log(target_joints.reshape(cfg.DATASET.NUM_JOINTS, 3).detach().cpu().numpy(),
                        './results/figure/joints',
-                       "gt_joints",
+                       f"gt_joints_{person_id}",
                        example_ct)
 
             threeviews_log(feature, './results/figure/threeviews',
-                           'feature', example_ct)
+                           f'feature_{person_id}', example_ct)
             threeviews_log(output, './results/figure/threeviews',
-                           'output', example_ct)
+                           f'output_{person_id}', example_ct)
             threeviews_log(vol, './results/figure/threeviews',
-                           'volume', example_ct)
+                           f'volume_{person_id}', example_ct)
 
         optimizer.zero_grad()
         loss.backward()

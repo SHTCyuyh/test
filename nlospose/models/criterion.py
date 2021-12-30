@@ -37,7 +37,7 @@ def _assert_no_grad(tensor):
         "mark these tensors as not requiring gradients"
 
 
-def generate_3d_integral_preds_tensor(heatmaps, num_joints, x_dim, y_dim, z_dim):
+def generate_3d_integral_preds_tensor(heatmaps, num_joints, x_dim, y_dim, z_dim): # (d h w)
     assert isinstance(heatmaps, torch.Tensor)
     '''
     Parameter
@@ -65,7 +65,7 @@ def generate_3d_integral_preds_tensor(heatmaps, num_joints, x_dim, y_dim, z_dim)
     accu_y = accu_y.sum(dim=2, keepdim=True)
     accu_z = accu_z.sum(dim=2, keepdim=True)
 
-    return accu_x, accu_y, accu_z
+    return accu_z, accu_y, accu_x
 
 
 def softmax_integral_tensor(preds, num_joints, output_3d, hm_width, hm_height, hm_depth):
