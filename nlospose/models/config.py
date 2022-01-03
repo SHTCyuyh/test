@@ -2,7 +2,7 @@ from yacs.config import CfgNode as CN
 
 # hardware
 _C = CN()
-_C.PROJECT_NAME = "nlos_backbone_jointsChecked_1227"
+_C.PROJECT_NAME = "nlos_backbone_jointsChecked_0103"
 _C.DEVICE = (2)  # ATTENTION: nlos_unet load in 'meas2vol.py' only support ONE GPU
 _C.NUM_WORKERS = 16
 _C.WANDB = False
