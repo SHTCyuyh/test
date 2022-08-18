@@ -150,7 +150,9 @@ def mean_velocity_error(predicted, target):
 
 # 		return loss / num_joints
 
-
+def mse_loss(pre, target):
+    out = (pre - target) ** 2
+    return out/len(pre)
 # class L2JointLocationLoss(nn.Module):
 # 	def __init__(self, output_3d, size_average=True, reduce=True):
 # 		super(L2JointLocationLoss, self).__init__()
