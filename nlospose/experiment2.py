@@ -21,7 +21,7 @@ from nlospose.trainer import train
 from nlospose.eval import eval
 from lib.vis_3view import vis_3view
 from torchsummary import summary
-from models.loss import mpjpe, n_mpjpe, p_mpjpe
+from models.loss import mpjpe, n_mpjpe, p_mpjpe, mse_loss
 # from mayavi import mlab
 # mlab.options.offscreen = True
 
@@ -55,7 +55,8 @@ def make(cfg):
     else:
         # model = Meas2Pose(cfg).to(cfg.DEVICE)
         model = NlosPose(cfg).to(cfg.DEVICE)
-    criterion = mpjpe
+    # criterion = mpjpe
+    criterion = mse_loss
     optimizer = optim.AdamW(
         model.parameters(),
         lr=cfg.TRAIN.LR,
