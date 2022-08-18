@@ -97,58 +97,6 @@ def mean_velocity_error(predicted, target):
     
     return np.mean(np.linalg.norm(velocity_predicted - velocity_target, axis=len(target.shape)-1))
 
-# class NMTNORMCritierion(nn.Module):
-# 	"""docstring for NMTNORMCritierion"""
-# 	def __init__(self, label_smoothing = 0.0):
-# 		super(NMTNORMCritierion, self).__init__()
-# 		self.label_smoothing = label_smoothing
-# 		self.LogSoftmax = nn.LogSoftmax(dim = 1)
-
-# 		if label_smoothing > 0:
-# 			self.criterion_ = nn.KLDivLoss(reduction = 'none')
-# 		else:
-# 			self.criterion_ = nn.NLLLoss(reduction = 'none',ignore_index = 100000)
-# 		self.confidence = 1.0 - label_smoothing
-
-# 	def _smooth_label(self, num_tokens):
-# 		one_hot = torch.randn(1, num_tokens)
-# 		one_hot.fill_(self.label_smoothing / (num_tokens - 1))
-# 		return one_hot
-
-# 	def _bottle(self, v):
-# 		return v.view(-1, v.size(2))
-
-# 	def criterion(self, dec_outs, labels):
-# 		scores = self.LogSoftmax(dec_outs)
-# 		num_tokens = scores.size(-1)
-
-# 		gtruth = labels.view(-1)
-# 		if self.confidence < 1:
-# 			tdata = gtruth.detach()
-# 			one_hot = self._smooth_label(num_tokens)
-# 			if labels.is_cuda:
-# 				one_hot = one_hot.cuda()
-# 			tmp_ = one_hot.repeat(gtruth.size(0) ,1)
-# 			tmp_.scatter_(1, tdata.unsqueeze(1), self.confidence)
-# 			gtruth = tmp_.detach()
-# 		loss = torch.mean(self.criterion_(scores, gtruth), dim = 1)
-# 		return loss
-
-# 	def forward(self, output_x, output_y, target, target_weight):
-# 		batch_size = output_x.size(0)
-# 		num_joints = output_x.size(1)
-# 		loss = 0 
-
-# 		for idx in range(num_joints):
-# 			coord_x_pred = output_x[:, idx].squeeze()
-# 			coord_y_pred = output_y[:, idx].squeeze()
-# 			coord_gt = target[:, idx].squeeze()
-# 			weight = target_weight[:, idx].squeeze()
-
-# 			loss += self.criterion(coord_x_pred, coord_gt[:, 0].mul(weight).mean())
-# 			loss += self.criterion(coord_y_pred, coord_gt[:, 1].mul(weight).mean())
-
-# 		return loss / num_joints
 
 def mse_loss(pre, target):
     out = (pre - target) ** 2
