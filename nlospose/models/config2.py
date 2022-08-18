@@ -4,7 +4,7 @@ from yacs.config import CfgNode as CN
 # hardware
 _C = CN()
 _C.PROJECT_NAME = "ping_estimator"
-_C.DEVICE = (2)  # ATTENTION: nlos_unet load in 'meas2vol.py' only support ONE GPU
+_C.DEVICE = (1)  # ATTENTION: nlos_unet load in 'meas2vol.py' only support ONE GPU
 _C.NUM_WORKERS = 18
 _C.WANDB = True
 # model
@@ -58,10 +58,10 @@ _C.DATASET.NUM_JOINTS = 24
 _C.TRAIN = CN()
 _C.TRAIN.BEGIN_EPOCH = 0
 _C.TRAIN.END_EPOCH = 10
-_C.TRAIN.BATCH_SIZE = 1
+_C.TRAIN.BATCH_SIZE = 3
 _C.TRAIN.LR = 1e-5
 _C.TRAIN.LRD = 0.99
-_C.TRAIN.LR_STEP = [1,5,9]
+_C.TRAIN.LR_STEP = [1,2,3,4,5,6,7,8,9]
 _C.TRAIN.LR_FACTOR = 0.1
 _C.TRAIN.OPTIMIZER = 'AdamW'
 
