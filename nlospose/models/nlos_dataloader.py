@@ -11,6 +11,7 @@ from torch.utils.data import Dataset, DataLoader
 from scipy.ndimage import zoom
 from einops import rearrange
 from lib.vis_3view import vis_3view
+import scipy.io as sio
 
 from nlospose.models.config import _C as cfg
     
@@ -32,14 +33,14 @@ class NlosDataset(Dataset):
         self.jointsPath = os.path.join(datapath, 'joints')
         self.measPath = os.path.join(datapath, 'meas')
         measNames = os.listdir(self.measPath)
-        # volNames = os.listdir(self.volPath)
+        volNames = os.listdir(self.volPath)
         for measName in measNames:
             assert os.path.splitext(measName)[1] == '.hdr', \
                 f'Data type should be .hdr,not {measName} in {self.measPath}'
             measFile = os.path.join(self.measPath, measName)
             self.measFiles.append(measFile)
 
-            volFile = os.path.join(self.volPath, os.path.splitext(measName)[0] + '.npy')
+            volFile = os.path.join(self.volPath, os.path.splitext(measName)[0] + '.mat')
             assert os.path.isfile(volFile), \
                 f'Do not have related vol {volFile}'
             self.volFiles.append(volFile)
@@ -80,7 +81,7 @@ class NlosDataset(Dataset):
                 f'--------------------\nNo.{index} meas is wrong. \n--------------------------\n')
 
         meas = rearrange(meas, '(t h) w ->t h w', t=600)[:512]
-        vol = np.load(volFile).astype(np.float32)
+        vol = sio.loadmat(volFile)['vol']
         joints = np.loadtxt(jointFile)
 
         # meas = zoom(meas[:512, :, :], [0.5, 1, 1])  # too slow
@@ -107,9 +108,9 @@ class NlosDataset(Dataset):
         w = joints[:, 0].copy()
         h = joints[:, 1].copy()
         d = joints[:, 2].copy()
-        joints[:, 0] = d
-        joints[:, 1] = h
-        joints[:, 2] = w
+        joints[:, 0] = d 
+        joints[:, 1] = h 
+        joints[:, 2] = w 
         _, person_name = os.path.split(measFile)
         person_id, _ = os.path.splitext(person_name)
         return rearrange(meas, 't h w -> 1 t h w'), rearrange(vol, 'd h w -> 1 d h w'),  \

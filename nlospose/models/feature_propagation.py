@@ -271,7 +271,21 @@ def normalize(data_bxcxdxhxw):
 	data_norm *= 10.
 
 	return data_norm.view(b, c, d, h, w)
+	
+def normalize_feature(data_bxcxdxhxw):
+	nn.ReLU()(data_bxcxdxhxw)
 
+	b, c, d, h, w = data_bxcxdxhxw.shape
+	data_bxcxk = data_bxcxdxhxw.reshape(b, c, -1)
+
+	data_min = data_bxcxk.min(2, keepdim = True)[0]
+	data_zmean = data_bxcxk - data_min
+
+	data_max = data_zmean.max(2, keepdim = True)[0]
+	data_norm = data_zmean / (data_max + 1e-15)
+	data_norm *= 10.
+
+	return data_norm.view(b, c, d, h, w)
 
 class VisibleNet(nn.Module):
 	def __init__(self, basedim, layernum=0):

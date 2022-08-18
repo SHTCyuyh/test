@@ -65,8 +65,16 @@ def volume_log(volume, res_path, name, index):
 
 def joints_log(joints, res_path, joint_name, index=0):
     os.makedirs(res_path, exist_ok=True)
+    joints_txt_path = os.path.join(res_path, "txt")
+    os.makedirs(joints_txt_path, exist_ok=True)
+    np.savetxt(joints_txt_path + '/' +  f"{index}_" +joint_name + '.txt', joints)
     fig = plt.figure(2)
-    ax = fig.add_subplot(111, projection="3d")
+    # joint_name = joint_name[:-4]
+    try:
+         ax = fig.add_subplot(111, projection="3d")
+    except:
+        ax = plt.axes(projection='3d')
+        pass
     x_major_locator = MultipleLocator(10)
     ax.xaxis.set_major_locator(x_major_locator)
     ax.yaxis.set_major_locator(x_major_locator)
@@ -111,7 +119,7 @@ def joints_log(joints, res_path, joint_name, index=0):
     ax.invert_zaxis()
     # ax.invert_yaxis()
     # ax.invert_xaxis()
-    ax.figure.savefig(res_path + '/' + joint_name + f"{index}")
+    ax.figure.savefig(res_path + '/' + f'{index}_' + joint_name)
     # wandb.log({f"joints of {joint_name}": wandb.Image(ax.figure)}, commit=False) TODO
     plt.clf()
 

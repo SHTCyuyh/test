@@ -105,7 +105,7 @@ class UNet3d(nn.Module):
 
 
 if __name__ == '__main__':
-    datapath = '/home/liuping/data/meas2vol/train/'
+    datapath = '/data2/motion_test'
     train_dataset = NlosDataset(cfg, datapath)
     train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True, pin_memory=True)
     input, vol, joints, person_id = next(iter(train_dataloader))

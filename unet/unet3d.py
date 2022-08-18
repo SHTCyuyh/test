@@ -4,8 +4,8 @@ import torch.nn.functional as F
 from torch.utils.data.dataloader import DataLoader
 
 from torchsummary import summary
-from nlos_dataloader import NlosDataset
-from config import _C as cfg
+# from utils.nlos_dataloader import NlosDataset
+# from config.config_noise import _C as cfg
 
 
 class DoubleConv(nn.Module):
@@ -102,6 +102,20 @@ class UNet3d(nn.Module):
         out = self.dec4(out, x1)
         out = self.out(out)
         return out
+
+
+def freeze_layer(model):
+    '''
+    description: freeze parameters in model
+    param {
+        cfg : config
+        model : the model should be freezed
+    }
+    return {None}
+    '''
+    """"""
+    for _, param in model.named_parameters():
+        param.requires_grad = False
 
 
 if __name__ == '__main__':
