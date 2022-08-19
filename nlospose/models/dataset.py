@@ -1,5 +1,7 @@
 import os
+from re import T
 import sys
+from turtle import Turtle
 sys.path.append('./')
 sys.path.append('/home/yuyh/network_backbone_posenet3d/nlospose/models')
 # from lib.visualizer import joints_log
@@ -10,6 +12,7 @@ import matplotlib.pyplot as plt
 import torch
 
 from torch.utils.data import Dataset, DataLoader
+from prefetch_generator import BackgroundGenerator
 from scipy.ndimage import zoom
 from einops import rearrange
 # from lib.vis_3view import vis_3view
@@ -17,6 +20,10 @@ import scipy.io as sio
 
 from config import _C as cfg
     
+class DataLoaderX(DataLoader):
+
+    def __iter__(self):
+        return BackgroundGenerator(super().__iter__())
 
 class NlosDataset(Dataset):
     
@@ -155,17 +162,52 @@ class NlosDataset(Dataset):
         
         return self.len
 
+class data_prefetcher():
+    def __init__(self, loader, device):
+        self.loader = iter(loader)
+        self.stream = torch.cuda.Stream()
+        self.device = device
+        self.preload()
+# input, vol, target_joints, person_id
+    def preload(self):
+        try:
+            self.next_input,self.next_vol, self.next_target, self.next_personid = next(self.loader)
+        except StopIteration:
+            self.next_input = None
+            self.next_vol = None
+            self.next_target = None
+            self.next_personid = None
+            return
+        with torch.cuda.stream(self.stream):
+            self.next_input = self.next_input.to(device=self.device,non_blocking=True)
+            # self.next_vol = self.next_vol.to(device=self.device,non_blocking=True)
+            self.next_target = self.next_target.to(device=self.device,non_blocking=True)
+            # self.next_personid = self.next_personid
 
+            # With Amp, it isn't necessary to manually convert data to half.
+            # if args.fp16:
+            #     self.next_input = self.next_input.half()
+            # else:
+            self.next_input = self.next_input.float()
+            # self.next_input = self.next_input.sub_(self.mean).div_(self.std)
+    def next(self):
+        torch.cuda.current_stream().wait_stream(self.stream)
+        input, vol, target_joints, person_id = self.next_input,self.next_vol, self.next_target, self.next_personid
+        self.preload()
+        return input, vol, target_joints, person_id
 
 if __name__ == '__main__':
+    import time
     # a = np.random.random((224, 224))
     # plt.imshow(a, cmap='hot', interpolation='nearest')
     # print(a.sum())
 
     # plt.show()
     testDataLoader = True
+    test_perfetcher = False
+    test_generator = False
     if testDataLoader:
-        datapath = "/data2/og_data/person18"
+        datapath = "/data2/og_data/person16"
         train_data = NlosDataset(cfg, datapath)
         trainloader = DataLoader(train_data, batch_size=2, shuffle=False, pin_memory=True)
 
@@ -174,49 +216,48 @@ if __name__ == '__main__':
         # new_meas, new_vol, new_joints, new_person_id= dataiter.next()
 
         # print(new_person_id)
+        t = time.time()
         for step, (input, vol, target_joints, person_id) in enumerate(trainloader):
             print(person_id)
+            input = input.to("cuda:2")
+            use_t = time.time() - t
+            t = time.time()
+            print(use_t)  #7-10
 
-        # im = np.zeros((256,256))
-        # for i in range(24):
-        #     x = np.int64(joints[0,i,0])
-        #     y = np.int64(joints[0,i,1])
-        #     im[x:x+3,y:y+3] = 10
-        # plt.figure()
-        # plt.imshow(np.rot90(im))
-        # plt.xlabel("x")
-        # plt.ylabel("y")
-        # plt.savefig('./joints.jpg')
-        
-        # plt.figure()
-        # im2 = vol[0,0].sum(1)
-        # plt.imshow(np.rot90(im2))
-        # plt.xlabel("x")
-        # plt.ylabel("y")
-        # plt.savefig('./vol_proj.jpg')
-        
-        # plt.figure()
-        # plt.plot(meas[0,:,100,100])
-        # plt.savefig('./meas.jpg')
-        # print(f'meas\' type is {type(vol)}:\n{vol.shape}\n----------------')
-        # # print(joints.shape)
-        # # vis_3view(meas)
-        # from feature_propagation import FeaturePropagation
+    if test_perfetcher:
+        datapath = "/data2/og_data/person16"
+        train_data = NlosDataset(cfg, datapath)
+        trainloader = DataLoader(train_data, batch_size=3, shuffle=False, pin_memory=True)
+        prefetcher = data_prefetcher(trainloader, cfg.DEVICE)
+        t = time.time()
+        input, vol, target_joints, person_id = prefetcher.next()
+        # input = input.to("cuda:2")
+        step = 0
+        while input is not None:
+            step += 1
+            input, vol, target_joints, person_id = prefetcher.next()
+            # input = input.to("cuda:2")
+            use_t = time.time() - t
+            t = time.time()
+            print(use_t)
 
-        # model = FeaturePropagation(
-		# 	time_size=cfg.MODEL.TIME_SIZE // cfg.MODEL.TIME_DOWNSAMPLE_RATIO,
-		# 	image_size=cfg.MODEL.IMAGE_SIZE[0] // cfg.MODEL.IMAGE_DOWNSAMPLE_RATIO,
-		# 	wall_size=cfg.MODEL.WALL_SIZE,
-		# 	bin_len=cfg.MODEL.BIN_LEN * cfg.MODEL.TIME_DOWNSAMPLE_RATIO,
-		# 	dnum=cfg.MODEL.DNUM,
-		# 	dev=cfg.DEVICE,
-		# ).to('cuda:2')
+    if test_generator:
+        datapath = "/data2/og_data/person16"
+        train_data = NlosDataset(cfg, datapath)
+        trainloader = DataLoaderX(train_data, batch_size=3, shuffle=False, pin_memory=True)
 
-        # output = model(meas.to('cuda:2'))
-        
-        # from vis_3view import vis
-        
-        # print("finish")
+        # print(type(trainloader))
+        # dataiter = iter(trainloader)
+        # new_meas, new_vol, new_joints, new_person_id= dataiter.next()
+
+        # print(new_person_id)
+        t = time.time()
+        for step, (input, vol, target_joints, person_id) in enumerate(trainloader):
+            print(person_id)
+            input = input.to("cuda:2")
+            use_t = time.time() - t
+            t = time.time()
+            print(use_t)  #7-10       
 
  
 

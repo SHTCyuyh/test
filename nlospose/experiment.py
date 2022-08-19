@@ -9,7 +9,7 @@ from tqdm import tqdm
 from torch import nn
 from torch import optim
 
-from models.dataset import NlosDataset
+from models.dataset import NlosDataset, data_prefetcher
 from torch.utils.data import DataLoader
 
 
@@ -38,10 +38,12 @@ def make(cfg):
     train_dataloader = DataLoader(
         train_dataset, batch_size=cfg.TRAIN.BATCH_SIZE,
         shuffle=False, num_workers=cfg.NUM_WORKERS, pin_memory=False)
+    train_data_prefetcher = data_prefetcher(train_dataloader, cfg.DEVICE)
     eval_dataset = NlosDataset(cfg, datapath=cfg.DATASET.EVAL_PATH)
     eval_dataloader = DataLoader(
         eval_dataset, batch_size=cfg.TRAIN.BATCH_SIZE,
         num_workers=cfg.NUM_WORKERS, pin_memory=False)
+    eval_data_prefetcher = data_prefetcher(eval_dataloader, cfg.DEVICE)
     # TODO change fixed parameters to cfg
     if cfg.TRAIN.BEGIN_EPOCH != 0: 
         model = Meas2Pose(cfg).to(cfg.DEVICE)
@@ -61,7 +63,7 @@ def make(cfg):
         weight_decay=0.1
     )
 
-    return model, train_dataloader, criterion, optimizer, eval_dataloader
+    return model, len(train_dataloader),train_data_prefetcher, criterion, optimizer,len(eval_dataloader), eval_data_prefetcher
 
 
 def run():
@@ -74,9 +76,9 @@ def run():
                    
         # build_model_and_log(cfg, run)
 
-    seed_everything(23333)
+    seed_everything(0)
 
-    model, train_dataloader, criterion, optimizer, eval_dataloader = make(cfg)
+    model, lenth1, train_data_prefetcher, criterion, optimizer,lenth2,eval_data_prefetcher = make(cfg)
     if cfg.WANDB:
         wandb.watch(model, log='all')
 
@@ -90,12 +92,12 @@ def run():
     # wandb.log_artifact("/home/liuping/data/mini_test/", name='new_artifact', type='my_dataset')
     best_performance = np.finfo(np.float32).max
     for epoch in tqdm(range(cfg.TRAIN.BEGIN_EPOCH, cfg.TRAIN.END_EPOCH)):
-        train(model, train_dataloader, criterion, optimizer, cfg, epoch)
+        train(model, lenth1, train_data_prefetcher, criterion, optimizer, cfg, epoch)
         lr_scheduler.step()
         if epoch % 1 == 0 or epoch == cfg.TRAIN.END_EPOCH:
             os.makedirs(f'./checkpoint_{cfg.PROJECT_NAME}/', exist_ok=True)
             torch.save(model.state_dict(), f"./checkpoint_{cfg.PROJECT_NAME}/{epoch}.pth")
-        performance = eval(cfg, model, eval_dataloader,
+        performance = eval(cfg, model, lenth2,eval_data_prefetcher,
                            criterion, epoch)
         if performance < best_performance:
             os.makedirs(f'./results_{cfg.PROJECT_NAME}/trained_models/', exist_ok=True)

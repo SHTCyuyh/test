@@ -5,7 +5,7 @@ from yacs.config import CfgNode as CN
 _C = CN()
 _C.PROJECT_NAME = "nlosformer_depth_embed_0816"
 _C.DEVICE = (2)  # ATTENTION: nlos_unet load in 'meas2vol.py' only support ONE GPU
-_C.NUM_WORKERS = 18
+_C.NUM_WORKERS = 24
 _C.WANDB = True
 # model
 _C.MODEL = CN()
@@ -47,7 +47,7 @@ _C.DATASET.TRAIN_PATH = '/data2/og_data/person16'
 
 # _C.DATASET.EVAL_PATH = "/data1/nlospose/person_v2/person02/test/"
 # _C.DATASET.EVAL_PATH = "/data1/nlospose/pose_v1/pose00/train"
-_C.DATASET.EVAL_PATH = '/data2/og_data/person15'
+_C.DATASET.EVAL_PATH = '/data2/og_data/person16'
 
 _C.DATASET.VOL_SIZE = [256,256,256]
 _C.DATASET.DAWNSAMPLE_CNT = 2 #2

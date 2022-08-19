@@ -176,7 +176,7 @@ def get_attn_subsequent_mask(seq):
 
 class nlosformer(nn.Module):
     def __init__(self, num_joints=24, input_size=(64,64,64),patch_size=(1,1,1), in_chans=1, embed_dim=96,
-                 depths=4, num_heads=8, mlp_ratio=4, qkv_bias=True, qk_scale=None,
+                 depths=2, num_heads=8, mlp_ratio=4, qkv_bias=True, qk_scale=None,
                  drop_rate=0., attn_drop_rate=0., drop_path_rate=0.2, norm_layer=nn.LayerNorm,
                  patch_norm=False
                  ):
